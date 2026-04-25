@@ -10,13 +10,34 @@ import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
+/**
+ * Entité MongoDB représentant un snapshot du statut des lumières de l'automate Wago 750.
+ *
+ * Le champ {@code status} est un entier 16 bits envoyé par le Wago via MQTT.
+ * Chaque bit représente l'état ON/OFF d'une lumière (bit 0 = lumière 1, etc.).
+ * La conversion binaire pour l'affichage frontend est réalisée côté client.
+ *
+ * Collection MongoDB : "wago_status"
+ */
 @Document(value = "wago_status")
-@AllArgsConstructor // This annotation generates a constructor with parameters for all fields in the class
+@AllArgsConstructor
 @NoArgsConstructor
-@Builder // This annotation provides a builder pattern implementation for the class, allowing for more flexible object creation
-@Data // This annotation generates getters, setters, toString, equals, and hashCode methods for the class
+@Builder
+@Data
 public class WagoStatus {
-    private @Id String id;
+
+    /** Identifiant unique généré par MongoDB */
+    @Id
+    private String id;
+
+    /**
+     * Statut des lumières encodé en entier.
+     * Bug fix : était byte[] — le Wago envoie un entier (Short/Int) représentant
+     * un mot de 16 bits. byte[] empêchait la désérialisation correcte et cassait
+     * le builder dans WagoService.
+     */
     private int status;
+
+    /** Horodatage d'insertion côté backend (non fourni par le Wago) */
     private Date timestamp;
 }

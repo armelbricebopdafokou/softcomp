@@ -1,0 +1,43 @@
+version: "3.8"
+
+# ============================================================
+# Softcomp PoC — Infrastructure locale (développement)
+# ============================================================
+# Démarrage : docker-compose up -d
+# Arrêt     : docker-compose down
+# Volumes   : les données MongoDB sont persistées dans le volume "mongo-data"
+#             pour survivre aux redémarrages du conteneur.
+# ============================================================
+
+services:
+
+  # ----------------------------------------------------------
+  # MongoDB 7 — base de données principale
+  # ----------------------------------------------------------
+  mongodb:
+    image: mongo:7
+    container_name: softcomp-mongodb
+    restart: unless-stopped
+    ports:
+      # Port local 27017 → port container 27017
+      # Correspond à spring.data.mongodb.uri=mongodb://localhost:27017/softcomp
+      - "27017:27017"
+    environment:
+      # Pas d'authentification en développement local.
+      # En production, définir MONGO_INITDB_ROOT_USERNAME / PASSWORD.
+      MONGO_INITDB_DATABASE: softcomp
+    volumes:
+      # Volume nommé pour la persistance des données entre les redémarrages
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# ----------------------------------------------------------
+# Volumes nommés
+# ----------------------------------------------------------
+volumes:
+  mongo-data:
+    driver: local
